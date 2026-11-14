@@ -16,3 +16,6 @@ node_modules/
 deploy/terraform/.db_password.local
 deploy/terraform/.env.gcp
 deploy/terraform/*.log
+
+cover.out
+$profile
