@@ -75,8 +75,8 @@ func TestIncrementIsAtomic(t *testing.T) {
 
 	const goroutines = 100
 	var wg sync.WaitGroup
-	wg.Add(100)
-	for range 100 {
+	wg.Add(goroutines)
+	for range goroutines {
 		go func() {
 			defer wg.Done()
 			c.Increment("card:123", add)
@@ -88,8 +88,8 @@ func TestIncrementIsAtomic(t *testing.T) {
 	if !ok {
 		t.Fatal("Get(\"card:123\") reported the key as missing")
 	}
-	if got != 100 {
-		t.Errorf("Get(\"card:123\") = %d, want 100", got)
+	if got != goroutines {
+		t.Errorf("Get(\"card:123\") = %d, want %d", got, goroutines)
 	}
 }
 
