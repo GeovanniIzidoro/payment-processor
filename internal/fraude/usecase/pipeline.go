@@ -120,7 +120,9 @@ func NewPipeline(
 // Close releases the batcher worker
 func (p *Pipeline) Close() {
 	p.batcher.Close()
-	p.velocity.Close()
+	if err := p.velocity.Close(); err != nil {
+		p.logger.Warn("failed to close velocity cache", "error", err)
+	}
 }
 
 // Score runs one attempt thought the machine and returns the decision
@@ -210,7 +212,7 @@ func (p *Pipeline) finalize(_ context.Context, d *scoringData) (fsm.State, error
 }
 
 func (p *Pipeline) tiebreak(_ context.Context, d *scoringData) (fsm.State, error) {
-	// the summary buckets the amount so near indentical situations
+	// the summary buckets the amount so near identical situations
 	// embed to the same vector. Velocity stays out on purpose, it
 	// changes between retries of the same situation.
 	summary := fmt.Sprintf("%s %s bucket: %d country: %s",
@@ -220,10 +222,10 @@ func (p *Pipeline) tiebreak(_ context.Context, d *scoringData) (fsm.State, error
 		d.attempt.CountryCode)
 	d.vector = p.embedder.Embed(summary)
 
-	verdict, similary, hit := p.semCache.Lookup(d.vector)
+	verdict, similarity, hit := p.semCache.Lookup(d.vector)
 	if hit {
 		d.verdict = verdict
-		d.attempt.Reasons = append(d.attempt.Reasons, fmt.Sprintf("semantic_cache_hit:%.2f", similary))
+		d.attempt.Reasons = append(d.attempt.Reasons, fmt.Sprintf("semantic_cache_hit:%.2f", similarity))
 		return StateFinalize, nil
 	}
 
